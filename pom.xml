@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>edu.stanford.protege</groupId>
-	<artifactId>webprotege-entity</artifactId>
+	<artifactId>webprotege-entity-data</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
-	<name>webprotege-entity</name>
+	<name>webprotege-entity-data</name>
 	<properties>
 		<java.version>16</java.version>
 	</properties>
@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>29.0-jre</version>
+			<version>30.1.1-jre</version>
 		</dependency>
 
 		<dependency>
