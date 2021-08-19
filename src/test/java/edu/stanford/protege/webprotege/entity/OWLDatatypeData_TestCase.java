@@ -4,14 +4,20 @@ package edu.stanford.protege.webprotege.entity;
 import com.google.common.collect.ImmutableMap;
 import edu.stanford.protege.webprotege.common.DictionaryLanguage;
 import edu.stanford.protege.webprotege.common.LocalNameDictionaryLanguage;
+import edu.stanford.protege.webprotege.common.WebProtegeCommonConfiguration;
+import edu.stanford.protege.webprotege.jackson.WebprotegeOwlApiJacksonApplication;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLDatatype;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
+import org.springframework.boot.test.json.JacksonTester;
+import org.springframework.context.annotation.Import;
 
 import static edu.stanford.protege.webprotege.entity.PrimitiveType.DATA_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -21,12 +27,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @JsonTest
+@Import({WebprotegeOwlApiJacksonApplication.class, WebProtegeCommonConfiguration.class})
 public class OWLDatatypeData_TestCase {
 
     private OWLDatatypeData data;
 
     @Mock
     private OWLDatatype entity;
+
+    @Autowired
+    private JacksonTester<OWLEntityData> tester;
+
+    @Autowired
+    private OWLDataFactory dataFactory;
 
     private final String browserText = "The browserText";
 

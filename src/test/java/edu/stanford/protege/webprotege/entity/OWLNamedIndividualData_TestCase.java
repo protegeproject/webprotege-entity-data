@@ -4,14 +4,22 @@ package edu.stanford.protege.webprotege.entity;
 import com.google.common.collect.ImmutableMap;
 import edu.stanford.protege.webprotege.common.DictionaryLanguage;
 import edu.stanford.protege.webprotege.common.LocalNameDictionaryLanguage;
-import org.junit.Before;
+import edu.stanford.protege.webprotege.common.WebProtegeCommonConfiguration;
+import edu.stanford.protege.webprotege.jackson.WebprotegeOwlApiJacksonApplication;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
+import org.springframework.boot.test.json.JacksonTester;
+import org.springframework.context.annotation.Import;
+
+import java.io.IOException;
 
 import static edu.stanford.protege.webprotege.entity.PrimitiveType.NAMED_INDIVIDUAL;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -20,12 +28,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @JsonTest
+@Import({WebprotegeOwlApiJacksonApplication.class, WebProtegeCommonConfiguration.class})
 public class OWLNamedIndividualData_TestCase {
 
-    private OWLNamedIndividualData oWLNamedIndividualData;
+    private OWLNamedIndividualData data;
 
     @Mock
     private OWLNamedIndividual entity;
+
+    @Autowired
+    private JacksonTester<OWLEntityData> tester;
+
+    @Autowired
+    private OWLDataFactory dataFactory;
 
     private final String browserText = "The browserText";
 
@@ -35,7 +50,7 @@ public class OWLNamedIndividualData_TestCase {
     public void setUp() {
         shortForms = ImmutableMap.of(LocalNameDictionaryLanguage.get(), browserText);
         when(entity.getIRI()).thenReturn(IRI.create("http://example.org/x"));
-        oWLNamedIndividualData = OWLNamedIndividualData.get(entity, shortForms);
+        data = OWLNamedIndividualData.get(entity, shortForms);
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -48,47 +63,80 @@ public class OWLNamedIndividualData_TestCase {
 
     @Test
     public void shouldReturnSupplied_entity() {
-        assertThat(oWLNamedIndividualData.getEntity(), is(this.entity));
+        assertThat(data.getEntity(), is(this.entity));
     }
 
     @Test
     public void shouldReturnSupplied_browserText() {
-        assertThat(oWLNamedIndividualData.getBrowserText(), is(this.browserText));
+        assertThat(data.getBrowserText(), is(this.browserText));
     }
 
     @Test
     public void shouldBeEqualToSelf() {
-        assertThat(oWLNamedIndividualData, is(oWLNamedIndividualData));
+        assertThat(data, is(data));
     }
 
     @Test
     @SuppressWarnings("ObjectEqualsNull")
     public void shouldNotBeEqualToNull() {
-        assertThat(oWLNamedIndividualData.equals(null), is(false));
+        assertThat(data.equals(null), is(false));
     }
 
     @Test
     public void shouldBeEqualToOther() {
-        assertThat(oWLNamedIndividualData, is(OWLNamedIndividualData.get(entity, shortForms)));
+        assertThat(data, is(OWLNamedIndividualData.get(entity, shortForms)));
     }
 
     @Test
     public void shouldNotBeEqualToOtherThatHasDifferent_entity() {
-        assertThat(oWLNamedIndividualData, is(not(OWLNamedIndividualData.get(Mockito.mock(OWLNamedIndividual.class), shortForms))));
+        assertThat(data, is(not(OWLNamedIndividualData.get(Mockito.mock(OWLNamedIndividual.class), shortForms))));
     }
 
     @Test
     public void shouldBeEqualToOtherHashCode() {
-        assertThat(oWLNamedIndividualData.hashCode(), is(OWLNamedIndividualData.get(entity, shortForms).hashCode()));
+        assertThat(data.hashCode(), is(OWLNamedIndividualData.get(entity, shortForms).hashCode()));
     }
 
     @Test
     public void shouldImplementToString() {
-        assertThat(oWLNamedIndividualData.toString(), startsWith("OWLNamedIndividualData"));
+        assertThat(data.toString(), startsWith("OWLNamedIndividualData"));
     }
 
     @Test
     public void should_getType() {
-        assertThat(oWLNamedIndividualData.getType(), is(NAMED_INDIVIDUAL));
+        assertThat(data.getType(), is(NAMED_INDIVIDUAL));
+    }
+
+
+    @Test
+    public void shouldSerializeToJson() throws IOException {
+        var json = tester.write(data);
+        Assertions.assertThat(json).hasJsonPath("entity");
+        Assertions.assertThat(json).hasJsonPath("shortForms");
+    }
+
+    @Test
+    public void shouldDeserializeFromJson() throws IOException {
+        var json = """
+                {
+                    "type"   : "OWLNamedIndividualData",
+                    "entity" : {
+                        "iri" : "http://example.org/A",
+                        "type" : "owl:NamedIndividual"
+                    },
+                    "shortForms" : [
+                        {
+                            "dictionaryLanguage" : {
+                                "type" : "LocalName"
+                            },
+                            "shortForm" : "A"
+                        }
+                    ]
+                }
+                """;
+        var parsedContent = tester.parse(json);
+        var parsedEntityData = parsedContent.getObject();
+        var expectedClass = dataFactory.getOWLNamedIndividual(IRI.create("http://example.org/A"));
+        Assertions.assertThat(parsedEntityData.getEntity()).isEqualTo(expectedClass);
     }
 }

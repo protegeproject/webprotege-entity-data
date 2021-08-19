@@ -4,42 +4,61 @@ package edu.stanford.protege.webprotege.entity;
 import com.google.common.collect.ImmutableMap;
 import edu.stanford.protege.webprotege.common.DictionaryLanguage;
 import edu.stanford.protege.webprotege.common.LocalNameDictionaryLanguage;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
+import edu.stanford.protege.webprotege.common.WebProtegeCommonConfiguration;
+import edu.stanford.protege.webprotege.jackson.WebprotegeOwlApiJacksonApplication;
+import org.assertj.core.api.Assertions;
+import org.junit.Assert;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.json.JsonTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.json.JacksonTester;
+import org.springframework.context.annotation.Import;
+
+import java.io.IOException;
 
 import static edu.stanford.protege.webprotege.entity.PrimitiveType.CLASS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
-@RunWith(org.mockito.runners.MockitoJUnitRunner.class)
+@JsonTest
+@Import({WebprotegeOwlApiJacksonApplication.class, WebProtegeCommonConfiguration.class})
 public class OWLClassData_TestCase {
 
     private OWLClassData clsData;
 
-    @Mock
     private OWLClass entity;
 
     private final String browserText = "The browserText";
 
     private ImmutableMap<DictionaryLanguage, String> shortForms;
 
-    @Before
+    @Autowired
+    OWLDataFactory dataFactory;
+
+    @Autowired
+    JacksonTester<OWLClassData> tester;
+
+    @BeforeEach
     public void setUp() {
+        entity = TestUtils.newOWLClass();
         shortForms = ImmutableMap.of(LocalNameDictionaryLanguage.get(), browserText);
-        when(entity.getIRI()).thenReturn(IRI.create("http://example.org/x"));
         clsData = OWLClassData.get(entity, shortForms);
     }
 
     @SuppressWarnings("ConstantConditions")
-    @Test(expected = NullPointerException.class)
+    @Test
     public void shouldThrowNullPointerExceptionIf_entity_IsNull() {
-        OWLClassData.get(null, shortForms);
+        assertThrows(NullPointerException.class, () -> {
+            OWLClassData.get(null, shortForms);
+        });
     }
 
     @Test
@@ -70,7 +89,7 @@ public class OWLClassData_TestCase {
 
     @Test
     public void shouldNotBeEqualToOtherThatHasDifferent_entity() {
-        assertThat(clsData, is(not(OWLClassData.get(Mockito.mock(OWLClass.class), shortForms))));
+        assertThat(clsData, is(not(OWLClassData.get(TestUtils.newOWLClass(), shortForms))));
     }
 
     @Test
@@ -86,5 +105,37 @@ public class OWLClassData_TestCase {
     @Test
     public void should_getType() {
         assertThat(clsData.getType(), equalTo(CLASS));
+    }
+
+    @Test
+    public void shouldSerializeToJson() throws IOException {
+        var json = tester.write(clsData);
+        Assertions.assertThat(json).hasJsonPath("entity");
+        Assertions.assertThat(json).hasJsonPath("shortForms");
+    }
+
+    @Test
+    public void shouldDeserializeFromJson() throws IOException {
+        var json = """
+                {
+                    "type"   : "OWLClassData",
+                    "entity" : {
+                        "iri" : "http://example.org/A",
+                        "type" : "owl:Class"
+                    },
+                    "shortForms" : [
+                        {
+                            "dictionaryLanguage" : {
+                                "type" : "LocalName"
+                            },
+                            "shortForm" : "A"
+                        }
+                    ]
+                }
+                """;
+        var parsedContent = tester.parse(json);
+        var parsedEntityData = parsedContent.getObject();
+        var expectedClass = dataFactory.getOWLClass(IRI.create("http://example.org/A"));
+        Assertions.assertThat(parsedEntityData.getEntity()).isEqualTo(expectedClass);
     }
 }

@@ -4,23 +4,34 @@ package edu.stanford.protege.webprotege.entity;
 import com.google.common.collect.ImmutableMap;
 import edu.stanford.protege.webprotege.common.DictionaryLanguage;
 import edu.stanford.protege.webprotege.common.LocalNameDictionaryLanguage;
+import edu.stanford.protege.webprotege.common.WebProtegeCommonConfiguration;
+import edu.stanford.protege.webprotege.jackson.WebprotegeOwlApiJacksonApplication;
+import org.assertj.core.api.Assertions;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotationProperty;
+import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.json.JsonTest;
+import org.springframework.boot.test.json.JacksonTester;
+import org.springframework.context.annotation.Import;
+
+import java.io.IOException;
 
 import static edu.stanford.protege.webprotege.entity.PrimitiveType.ANNOTATION_PROPERTY;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@JsonTest
+@Import({WebprotegeOwlApiJacksonApplication.class, WebProtegeCommonConfiguration.class})
 public class OWLAnnotationPropertyData_TestCase {
 
     private OWLAnnotationPropertyData data;
@@ -28,11 +39,17 @@ public class OWLAnnotationPropertyData_TestCase {
     @Mock
     private OWLAnnotationProperty entity;
 
+    @Autowired
+    private JacksonTester<OWLEntityData> tester;
+
+    @Autowired
+    private OWLDataFactory dataFactory;
+
     private final String browserText = "The browserText";
 
     private ImmutableMap<DictionaryLanguage, String> shortForms;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         shortForms = ImmutableMap.of(LocalNameDictionaryLanguage.get(), browserText);
         when(entity.getIRI()).thenReturn(IRI.create("http://example.org/x"));
@@ -40,9 +57,11 @@ public class OWLAnnotationPropertyData_TestCase {
     }
 
     @SuppressWarnings("ConstantConditions" )
-    @Test(expected = NullPointerException.class)
+    @Test
     public void shouldThrowNullPointerExceptionIf_entity_IsNull() {
-        OWLAnnotationPropertyData.get(null, shortForms);
+        assertThrows(NullPointerException.class, () -> {
+            OWLAnnotationPropertyData.get(null, shortForms);
+        });
     }
 
     @Test
@@ -95,5 +114,38 @@ public class OWLAnnotationPropertyData_TestCase {
     @Test
     public void should_getType() {
         assertThat(data.getType(), is(ANNOTATION_PROPERTY));
+    }
+
+
+    @Test
+    public void shouldSerializeToJson() throws IOException {
+        var json = tester.write(data);
+        Assertions.assertThat(json).hasJsonPath("entity");
+        Assertions.assertThat(json).hasJsonPath("shortForms");
+    }
+
+    @org.junit.jupiter.api.Test
+    public void shouldDeserializeFromJson() throws IOException {
+        var json = """
+                {
+                    "type"   : "OWLAnnotationPropertyData",
+                    "entity" : {
+                        "iri" : "http://example.org/A",
+                        "type" : "owl:AnnotationProperty"
+                    },
+                    "shortForms" : [
+                        {
+                            "dictionaryLanguage" : {
+                                "type" : "LocalName"
+                            },
+                            "shortForm" : "A"
+                        }
+                    ]
+                }
+                """;
+        var parsedContent = tester.parse(json);
+        var parsedEntityData = parsedContent.getObject();
+        var expectedClass = dataFactory.getOWLAnnotationProperty(IRI.create("http://example.org/A"));
+        Assertions.assertThat(parsedEntityData.getEntity()).isEqualTo(expectedClass);
     }
 }
