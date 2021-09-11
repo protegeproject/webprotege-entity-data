@@ -141,27 +141,18 @@ public class OWLLiteralData_TestCase {
     @Test
     public void shouldSerializeToJson() throws IOException {
         var json = tester.write(data);
-        Assertions.assertThat(json).hasJsonPath("literal");
+        System.out.println(json.getJson());
+        Assertions.assertThat(json).extractingJsonPathStringValue("lang").isEqualTo(THE_LANG);
+        Assertions.assertThat(json).extractingJsonPathStringValue("value").isEqualTo(THE_LITERAL);
     }
 
     @Test
     public void shouldDeserializeFromJson() throws IOException {
         var json = """
                 {
-                    "type"   : "OWLLiteralData",
-                    "literal" : {
-                        "lang" : "en",
-                        "value" : "Hello",
-                        "type" : "rdfs:Literal"
-                    },
-                    "shortForms" : [
-                        {
-                            "dictionaryLanguage" : {
-                                "type" : "LocalName"
-                            },
-                            "shortForm" : "A"
-                        }
-                    ]
+                    "@type"   : "LiteralData",
+                    "lang"   : "en",
+                    "value"  : "Hello"
                 }
                 """;
         var parsedContent = tester.parse(json);

@@ -1,16 +1,12 @@
 package edu.stanford.protege.webprotege.entity;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.*;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import edu.stanford.protege.webprotege.common.ShortForm;
-import org.semanticweb.owlapi.model.OWLAnnotationValue;
-import org.semanticweb.owlapi.model.OWLEntity;
-import org.semanticweb.owlapi.model.OWLEntityVisitorEx;
-import org.semanticweb.owlapi.model.OWLLiteral;
+import org.semanticweb.owlapi.model.*;
+import uk.ac.manchester.cs.owl.owlapi.OWLDatatypeImpl;
+import uk.ac.manchester.cs.owl.owlapi.OWLLiteralImpl;
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
@@ -23,12 +19,18 @@ import java.util.Optional;
  */
 @AutoValue
 
-@JsonTypeName("OWLLiteralData")
+@JsonTypeName("LiteralData")
 public abstract class OWLLiteralData extends OWLPrimitiveData {
 
-    @JsonCreator
-    public static OWLLiteralData get(@JsonProperty("literal") @Nonnull OWLLiteral literal) {
+    public static OWLLiteralData get(@Nonnull OWLLiteral literal) {
         return new AutoValue_OWLLiteralData(literal);
+    }
+
+    @JsonCreator
+    private static OWLLiteralData get(@JsonProperty("value") String value,
+                                      @JsonProperty("lang") String lang,
+                                      @JsonProperty(value = "datatype") String iri) {
+        return get(new OWLLiteralImpl(value, lang, Optional.ofNullable(iri).map(IRI::create).map(OWLDatatypeImpl::new).orElse(null)));
     }
 
     @JsonIgnore
@@ -43,8 +45,30 @@ public abstract class OWLLiteralData extends OWLPrimitiveData {
     }
 
 
+    @JsonIgnore
     public OWLLiteral getLiteral() {
         return getObject();
+    }
+
+    @JsonProperty("value")
+    private String getValue() {
+        return getLiteral().getLiteral();
+    }
+
+    @JsonProperty("lang")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private String getLangTag() {
+        return getLiteral().getLang();
+    }
+
+    @JsonProperty("datatype")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private String getDatatype() {
+        var datatype = getLiteral().getDatatype();
+        if(datatype.isRDFPlainLiteral()) {
+            return "";
+        }
+        return datatype.getIRI().toString();
     }
 
     @JsonIgnore
