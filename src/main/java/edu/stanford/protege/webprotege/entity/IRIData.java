@@ -15,6 +15,7 @@ import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLEntityVisitorEx;
 
 import javax.annotation.Nonnull;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -32,19 +33,38 @@ public abstract class IRIData extends OWLPrimitiveData {
         return get(iri, toShortFormList(shortForms));
     }
 
+    public static IRIData get(IRI iri,
+                              ImmutableList<ShortForm> shortForms) {
+        return new AutoValue_IRIData(shortForms, false, iri);
+    }
+
+    public static IRIData get(IRI iri,
+                              ImmutableList<ShortForm> shortForms,
+                              boolean deprecated) {
+        return new AutoValue_IRIData(shortForms, deprecated, iri);
+    }
+
     @JsonCreator
-    public static IRIData get(@JsonProperty("iri") IRI iri,
-                              @JsonProperty("shortForms") ImmutableList<ShortForm> shortForms) {
-        return new AutoValue_IRIData(shortForms, iri);
+    private static IRIData get(@JsonProperty("iri") String iri,
+                              @JsonProperty(value = "shortForms", defaultValue = "[]") ImmutableList<ShortForm> shortForms,
+                               @JsonProperty(value = "deprecated", defaultValue = "false") boolean deprecated) {
+        return new AutoValue_IRIData(Objects.requireNonNullElse(shortForms, ImmutableList.of()),
+                                     deprecated,
+                                     IRI.create(iri));
     }
 
     @Nonnull
     @Override
     public abstract IRI getObject();
 
-    @JsonProperty("iri")
+    @JsonIgnore
     public IRI getIri() {
         return getObject();
+    }
+
+    @JsonProperty("iri")
+    private String getIriString() {
+        return getIri().toString();
     }
 
     @Override
@@ -97,9 +117,4 @@ public abstract class IRIData extends OWLPrimitiveData {
         return Optional.of(getObject());
     }
 
-    @JsonIgnore
-    @Override
-    public boolean isDeprecated() {
-        return super.isDeprecated();
-    }
 }

@@ -127,7 +127,7 @@ public abstract class OWLLiteralData extends OWLPrimitiveData {
     @JsonIgnore
     @Override
     public boolean isDeprecated() {
-        return super.isDeprecated();
+        return false;
     }
 
     @JsonIgnore
