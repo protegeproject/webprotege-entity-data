@@ -1,6 +1,7 @@
 package edu.stanford.protege.webprotege.entity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.auto.value.AutoValue;
@@ -8,10 +9,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import edu.stanford.protege.webprotege.common.DictionaryLanguage;
 import edu.stanford.protege.webprotege.common.ShortForm;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLEntityVisitorEx;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
+import uk.ac.manchester.cs.owl.owlapi.OWLObjectPropertyImpl;
 
 import javax.annotation.Nonnull;
+import java.util.Objects;
 
 /**
  * Author: Matthew Horridge<br>
@@ -21,7 +25,7 @@ import javax.annotation.Nonnull;
  */
 @AutoValue
 
-@JsonTypeName("OWLObjectPropertyData")
+@JsonTypeName("ObjectPropertyData")
 public abstract class OWLObjectPropertyData extends OWLPropertyData {
 
 
@@ -37,11 +41,17 @@ public abstract class OWLObjectPropertyData extends OWLPropertyData {
         return get(property, toShortFormList(shortForms), deprecated);
     }
 
+    public static OWLObjectPropertyData get(OWLObjectProperty property,
+                                            ImmutableList<ShortForm> shortForms,
+                                            boolean deprecated) {
+        return new AutoValue_OWLObjectPropertyData(Objects.requireNonNullElse(shortForms, ImmutableList.of()), deprecated, property);
+    }
+
     @JsonCreator
-    public static OWLObjectPropertyData get(@JsonProperty("entity") OWLObjectProperty property,
-                                            @JsonProperty("shortForms") ImmutableList<ShortForm> shortForms,
-                                            @JsonProperty("deprecated") boolean deprecated) {
-        return new AutoValue_OWLObjectPropertyData(shortForms, deprecated, property);
+    private static OWLObjectPropertyData get(@JsonProperty("iri") String iri,
+                                             @JsonProperty(value = "shortForms", defaultValue = "[]") ImmutableList<ShortForm> shortForms,
+                                             @JsonProperty(value = "deprecated", defaultValue = "false")  boolean deprecated) {
+        return new AutoValue_OWLObjectPropertyData(Objects.requireNonNullElse(shortForms, ImmutableList.of()), deprecated, new OWLObjectPropertyImpl(IRI.create(iri)));
     }
 
     @Nonnull
@@ -53,9 +63,15 @@ public abstract class OWLObjectPropertyData extends OWLPropertyData {
         return PrimitiveType.OBJECT_PROPERTY;
     }
 
+    @JsonIgnore
     @Override
     public OWLObjectProperty getEntity() {
         return getObject();
+    }
+
+    @JsonProperty("iri")
+    private String getIri() {
+        return getEntity().getIRI().toString();
     }
 
     @Override

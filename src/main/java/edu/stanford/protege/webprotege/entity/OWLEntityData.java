@@ -1,6 +1,7 @@
 package edu.stanford.protege.webprotege.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -88,5 +89,6 @@ public abstract class OWLEntityData extends OWLPrimitiveData {
         return Optional.of(getEntity());
     }
 
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public abstract boolean isDeprecated();
 }

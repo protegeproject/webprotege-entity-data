@@ -1,6 +1,7 @@
 package edu.stanford.protege.webprotege.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -63,6 +64,7 @@ public abstract class OWLPrimitiveData extends ObjectData implements Comparable<
                 .collect(toImmutableMap(ShortForm::getDictionaryLanguage, ShortForm::getShortForm));
     }
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public abstract ImmutableList<ShortForm> getShortForms();
 
     /**
