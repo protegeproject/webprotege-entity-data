@@ -6,6 +6,7 @@ import edu.stanford.protege.webprotege.common.DictionaryLanguage;
 import edu.stanford.protege.webprotege.common.LocalNameDictionaryLanguage;
 import edu.stanford.protege.webprotege.common.WebProtegeCommonConfiguration;
 import edu.stanford.protege.webprotege.jackson.WebProtegeJacksonApplication;
+import org.assertj.core.api.Assertions;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.context.annotation.Import;
+
+import java.io.IOException;
 
 import static edu.stanford.protege.webprotege.entity.PrimitiveType.DATA_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -105,5 +108,65 @@ public class OWLDatatypeData_TestCase {
     @Test
     public void should_getType() {
         assertThat(data.getType(), is(DATA_TYPE));
+    }
+
+
+    @Test
+    public void shouldSerializeToJson() throws IOException {
+        var json = tester.write(data);
+        System.out.println(json.getJson());
+        Assertions.assertThat(json).extractingJsonPathStringValue("iri").isEqualTo("http://example.org/x");
+        Assertions.assertThat(json).hasJsonPath("shortForms");
+    }
+
+    @Test
+    public void shouldDeserializeFromJson() throws IOException {
+        var json = """
+                {
+                    "@type"   : "DatatypeData",
+                    "iri"     : "http://example.org/d",
+                    "shortForms" : [
+                        {
+                            "dictionaryLanguage" : {
+                                "type" : "LocalName"
+                            },
+                            "shortForm" : "i"
+                        }
+                    ]
+                }
+                """;
+        var parsedContent = tester.parse(json);
+        var parsedEntityData = parsedContent.getObject();
+        var expectedClass = dataFactory.getOWLDatatype(IRI.create("http://example.org/d"));
+        Assertions.assertThat(parsedEntityData.getEntity()).isEqualTo(expectedClass);
+    }
+
+    @Test
+    public void shouldDeserializeFromJsonWithMissingShortForms() throws IOException {
+        var json = """
+                {
+                    "@type"   : "DatatypeData",
+                    "iri"     : "http://example.org/d"
+                }
+                """;
+        var parsedContent = tester.parse(json);
+        var parsedEntityData = parsedContent.getObject();
+        assertThat(parsedEntityData.isDeprecated(), is(false));
+        var expectedClass = dataFactory.getOWLDatatype(IRI.create("http://example.org/d"));
+        Assertions.assertThat(parsedEntityData.getEntity()).isEqualTo(expectedClass);
+    }
+
+    @Test
+    public void shouldDeserializeAsDeprecated() throws IOException {
+        var json = """
+                {
+                    "@type"      : "DatatypeData",
+                    "iri"        : "http://example.org/d",
+                    "deprecated" : true
+                }
+                """;
+        var parsedContent = tester.parse(json);
+        var parsedEntityData = parsedContent.getObject();
+        assertThat(parsedEntityData.isDeprecated(), is(true));
     }
 }
