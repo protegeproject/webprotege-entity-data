@@ -1,6 +1,7 @@
 package edu.stanford.protege.webprotege.entity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.auto.value.AutoValue;
@@ -8,10 +9,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import edu.stanford.protege.webprotege.common.DictionaryLanguage;
 import edu.stanford.protege.webprotege.common.ShortForm;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLEntityVisitorEx;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
+import uk.ac.manchester.cs.owl.owlapi.OWLNamedIndividualImpl;
 
 import javax.annotation.Nonnull;
+import java.util.Objects;
 
 /**
  * Author: Matthew Horridge<br>
@@ -21,7 +25,7 @@ import javax.annotation.Nonnull;
  */
 @AutoValue
 
-@JsonTypeName("OWLNamedIndividualData")
+@JsonTypeName("NamedIndividualData")
 public abstract class OWLNamedIndividualData extends OWLEntityData {
 
 
@@ -37,20 +41,32 @@ public abstract class OWLNamedIndividualData extends OWLEntityData {
         return get(individual, toShortFormList(shortForms), deprecated);
     }
 
-    @JsonCreator
     public static OWLNamedIndividualData get(@JsonProperty("entity") OWLNamedIndividual individual,
                                             @JsonProperty("shortForms") ImmutableList<ShortForm> shortForms,
                                             @JsonProperty("deprecated") boolean deprecated) {
         return new AutoValue_OWLNamedIndividualData(shortForms, deprecated, individual);
     }
 
+    @JsonCreator
+    private static OWLNamedIndividualData get(@JsonProperty("iri") String iri,
+                                            @JsonProperty(value = "shortForms", defaultValue = "[]") ImmutableList<ShortForm> shortForms,
+                                            @JsonProperty(value = "deprecated", defaultValue = "false") boolean deprecated) {
+        return new AutoValue_OWLNamedIndividualData(Objects.requireNonNullElse(shortForms, ImmutableList.of()), deprecated, new OWLNamedIndividualImpl(IRI.create(iri)));
+    }
+
     @Nonnull
     @Override
     public abstract OWLNamedIndividual getObject();
 
+    @JsonIgnore
     @Override
     public OWLNamedIndividual getEntity() {
         return getObject();
+    }
+
+    @JsonProperty("iri")
+    private String getIri()  {
+        return getEntity().getIRI().toString();
     }
 
     @Override

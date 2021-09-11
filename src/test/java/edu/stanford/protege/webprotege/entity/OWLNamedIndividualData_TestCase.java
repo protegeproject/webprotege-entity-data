@@ -108,36 +108,63 @@ public class OWLNamedIndividualData_TestCase {
     }
 
 
+
     @Test
     public void shouldSerializeToJson() throws IOException {
         var json = tester.write(data);
-        Assertions.assertThat(json).hasJsonPath("entity");
-        Assertions.assertThat(json).hasJsonPath("shortForms");
         System.out.println(json.getJson());
+        Assertions.assertThat(json).extractingJsonPathStringValue("iri").isEqualTo("http://example.org/x");
+        Assertions.assertThat(json).hasJsonPath("shortForms");
     }
 
     @Test
     public void shouldDeserializeFromJson() throws IOException {
         var json = """
                 {
-                    "@type"   : "OWLNamedIndividualData",
-                    "entity" : {
-                        "iri" : "http://example.org/A",
-                        "@type" : "NamedIndividual"
-                    },
+                    "@type"   : "NamedIndividualData",
+                    "iri"     : "http://example.org/i",
                     "shortForms" : [
                         {
                             "dictionaryLanguage" : {
                                 "type" : "LocalName"
                             },
-                            "shortForm" : "A"
+                            "shortForm" : "i"
                         }
                     ]
                 }
                 """;
         var parsedContent = tester.parse(json);
         var parsedEntityData = parsedContent.getObject();
-        var expectedClass = dataFactory.getOWLNamedIndividual(IRI.create("http://example.org/A"));
+        var expectedClass = dataFactory.getOWLNamedIndividual(IRI.create("http://example.org/i"));
         Assertions.assertThat(parsedEntityData.getEntity()).isEqualTo(expectedClass);
+    }
+
+    @Test
+    public void shouldDeserializeFromJsonWithMissingShortForms() throws IOException {
+        var json = """
+                {
+                    "@type"   : "NamedIndividualData",
+                    "iri"     : "http://example.org/i"
+                }
+                """;
+        var parsedContent = tester.parse(json);
+        var parsedEntityData = parsedContent.getObject();
+        assertThat(parsedEntityData.isDeprecated(), is(false));
+        var expectedClass = dataFactory.getOWLNamedIndividual(IRI.create("http://example.org/i"));
+        Assertions.assertThat(parsedEntityData.getEntity()).isEqualTo(expectedClass);
+    }
+
+    @Test
+    public void shouldDeserializeAsDeprecated() throws IOException {
+        var json = """
+                {
+                    "@type"      : "NamedIndividualData",
+                    "iri"        : "http://example.org/i",
+                    "deprecated" : true
+                }
+                """;
+        var parsedContent = tester.parse(json);
+        var parsedEntityData = parsedContent.getObject();
+        assertThat(parsedEntityData.isDeprecated(), is(true));
     }
 }
