@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import edu.stanford.protege.webprotege.common.DictionaryLanguage;
 import edu.stanford.protege.webprotege.common.LocalNameDictionaryLanguage;
 import edu.stanford.protege.webprotege.common.WebProtegeCommonConfiguration;
-import edu.stanford.protege.webprotege.jackson.WebprotegeOwlApiJacksonApplication;
+import edu.stanford.protege.webprotege.jackson.WebProtegeJacksonApplication;
 import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +29,7 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
 @JsonTest
-@Import({WebprotegeOwlApiJacksonApplication.class, WebProtegeCommonConfiguration.class})
+@Import({WebProtegeJacksonApplication.class, WebProtegeCommonConfiguration.class})
 public class OWLClassData_TestCase {
 
     private OWLClassData clsData;
@@ -118,10 +118,10 @@ public class OWLClassData_TestCase {
     public void shouldDeserializeFromJson() throws IOException {
         var json = """
                 {
-                    "type"   : "OWLClassData",
+                    "@type"   : "OWLClassData",
                     "entity" : {
                         "iri" : "http://example.org/A",
-                        "type" : "owl:Class"
+                        "@type" : "Class"
                     },
                     "shortForms" : [
                         {

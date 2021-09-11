@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import edu.stanford.protege.webprotege.common.DictionaryLanguage;
 import edu.stanford.protege.webprotege.common.LocalNameDictionaryLanguage;
 import edu.stanford.protege.webprotege.common.WebProtegeCommonConfiguration;
-import edu.stanford.protege.webprotege.jackson.WebprotegeOwlApiJacksonApplication;
+import edu.stanford.protege.webprotege.jackson.WebProtegeJacksonApplication;
 import org.assertj.core.api.Assertions;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @JsonTest
-@Import({WebprotegeOwlApiJacksonApplication.class, WebProtegeCommonConfiguration.class})
+@Import({WebProtegeJacksonApplication.class, WebProtegeCommonConfiguration.class})
 public class OWLDataPropertyData_TestCase {
 
     private OWLDataPropertyData data;
@@ -126,10 +126,10 @@ public class OWLDataPropertyData_TestCase {
     public void shouldDeserializeFromJson() throws IOException {
         var json = """
                 {
-                    "type"   : "OWLDataPropertyData",
+                    "@type"   : "OWLDataPropertyData",
                     "entity" : {
                         "iri" : "http://example.org/A",
-                        "type" : "owl:DatatypeProperty"
+                        "@type" : "DataProperty"
                     },
                     "shortForms" : [
                         {
