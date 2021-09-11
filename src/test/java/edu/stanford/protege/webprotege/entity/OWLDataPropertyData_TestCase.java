@@ -118,7 +118,7 @@ public class OWLDataPropertyData_TestCase {
     @Test
     public void shouldSerializeToJson() throws IOException {
         var json = tester.write(data);
-        Assertions.assertThat(json).hasJsonPath("entity");
+        Assertions.assertThat(json).extractingJsonPathStringValue("iri").isEqualTo("http://example.org/x");
         Assertions.assertThat(json).hasJsonPath("shortForms");
     }
 
@@ -126,11 +126,8 @@ public class OWLDataPropertyData_TestCase {
     public void shouldDeserializeFromJson() throws IOException {
         var json = """
                 {
-                    "@type"   : "OWLDataPropertyData",
-                    "entity" : {
-                        "iri" : "http://example.org/A",
-                        "@type" : "DataProperty"
-                    },
+                    "@type"   : "DataPropertyData",
+                    "iri"     : "http://example.org/A",
                     "shortForms" : [
                         {
                             "dictionaryLanguage" : {
@@ -145,5 +142,34 @@ public class OWLDataPropertyData_TestCase {
         var parsedEntityData = parsedContent.getObject();
         var expectedClass = dataFactory.getOWLDataProperty(IRI.create("http://example.org/A"));
         Assertions.assertThat(parsedEntityData.getEntity()).isEqualTo(expectedClass);
+    }
+
+    @Test
+    public void shouldDeserializeFromJsonWithMissingShortForms() throws IOException {
+        var json = """
+                {
+                    "@type"   : "DataPropertyData",
+                    "iri"     : "http://example.org/p"
+                }
+                """;
+        var parsedContent = tester.parse(json);
+        var parsedEntityData = parsedContent.getObject();
+        assertThat(parsedEntityData.isDeprecated(), is(false));
+        var expectedClass = dataFactory.getOWLDataProperty(IRI.create("http://example.org/p"));
+        Assertions.assertThat(parsedEntityData.getEntity()).isEqualTo(expectedClass);
+    }
+
+    @Test
+    public void shouldDeserializeAsDeprecated() throws IOException {
+        var json = """
+                {
+                    "@type"      : "DataPropertyData",
+                    "iri"        : "http://example.org/p",
+                    "deprecated" : true
+                }
+                """;
+        var parsedContent = tester.parse(json);
+        var parsedEntityData = parsedContent.getObject();
+        assertThat(parsedEntityData.isDeprecated(), is(true));
     }
 }
