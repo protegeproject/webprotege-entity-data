@@ -117,35 +117,63 @@ public class OWLAnnotationPropertyData_TestCase {
     }
 
 
+
     @Test
     public void shouldSerializeToJson() throws IOException {
         var json = tester.write(data);
-        Assertions.assertThat(json).hasJsonPath("entity");
+        System.out.println(json.getJson());
+        Assertions.assertThat(json).extractingJsonPathStringValue("iri").isEqualTo("http://example.org/x");
         Assertions.assertThat(json).hasJsonPath("shortForms");
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     public void shouldDeserializeFromJson() throws IOException {
         var json = """
                 {
-                    "@type"   : "OWLAnnotationPropertyData",
-                    "entity" : {
-                        "iri" : "http://example.org/A",
-                        "@type" : "AnnotationProperty"
-                    },
+                    "@type"   : "AnnotationPropertyData",
+                    "iri"     : "http://example.org/p",
                     "shortForms" : [
                         {
                             "dictionaryLanguage" : {
                                 "type" : "LocalName"
                             },
-                            "shortForm" : "A"
+                            "shortForm" : "p"
                         }
                     ]
                 }
                 """;
         var parsedContent = tester.parse(json);
         var parsedEntityData = parsedContent.getObject();
-        var expectedClass = dataFactory.getOWLAnnotationProperty(IRI.create("http://example.org/A"));
+        var expectedClass = dataFactory.getOWLAnnotationProperty(IRI.create("http://example.org/p"));
         Assertions.assertThat(parsedEntityData.getEntity()).isEqualTo(expectedClass);
+    }
+
+    @Test
+    public void shouldDeserializeFromJsonWithMissingShortForms() throws IOException {
+        var json = """
+                {
+                    "@type"   : "AnnotationPropertyData",
+                    "iri"     : "http://example.org/p"
+                }
+                """;
+        var parsedContent = tester.parse(json);
+        var parsedEntityData = parsedContent.getObject();
+        assertThat(parsedEntityData.isDeprecated(), is(false));
+        var expectedClass = dataFactory.getOWLAnnotationProperty(IRI.create("http://example.org/p"));
+        Assertions.assertThat(parsedEntityData.getEntity()).isEqualTo(expectedClass);
+    }
+
+    @Test
+    public void shouldDeserializeAsDeprecated() throws IOException {
+        var json = """
+                {
+                    "@type"      : "AnnotationPropertyData",
+                    "iri"        : "http://example.org/p",
+                    "deprecated" : true
+                }
+                """;
+        var parsedContent = tester.parse(json);
+        var parsedEntityData = parsedContent.getObject();
+        assertThat(parsedEntityData.isDeprecated(), is(true));
     }
 }
