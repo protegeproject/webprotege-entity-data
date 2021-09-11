@@ -110,7 +110,8 @@ public class OWLClassData_TestCase {
     @Test
     public void shouldSerializeToJson() throws IOException {
         var json = tester.write(clsData);
-        Assertions.assertThat(json).hasJsonPath("entity");
+        System.out.println(json.getJson());
+        Assertions.assertThat(json).extractingJsonPathStringValue("iri").isEqualTo(entity.getIRI().toString());
         Assertions.assertThat(json).hasJsonPath("shortForms");
     }
 
@@ -118,11 +119,8 @@ public class OWLClassData_TestCase {
     public void shouldDeserializeFromJson() throws IOException {
         var json = """
                 {
-                    "@type"   : "OWLClassData",
-                    "entity" : {
-                        "iri" : "http://example.org/A",
-                        "@type" : "Class"
-                    },
+                    "@type"   : "ClassData",
+                    "iri"     : "http://example.org/A",
                     "shortForms" : [
                         {
                             "dictionaryLanguage" : {
@@ -135,6 +133,22 @@ public class OWLClassData_TestCase {
                 """;
         var parsedContent = tester.parse(json);
         var parsedEntityData = parsedContent.getObject();
+        assertThat(parsedEntityData.isDeprecated(), is(false));
+        var expectedClass = dataFactory.getOWLClass(IRI.create("http://example.org/A"));
+        Assertions.assertThat(parsedEntityData.getEntity()).isEqualTo(expectedClass);
+    }
+
+    @Test
+    public void shouldDeserializeFromJsonWithMissingShortForms() throws IOException {
+        var json = """
+                {
+                    "@type"   : "ClassData",
+                    "iri"     : "http://example.org/A"
+                }
+                """;
+        var parsedContent = tester.parse(json);
+        var parsedEntityData = parsedContent.getObject();
+        assertThat(parsedEntityData.isDeprecated(), is(false));
         var expectedClass = dataFactory.getOWLClass(IRI.create("http://example.org/A"));
         Assertions.assertThat(parsedEntityData.getEntity()).isEqualTo(expectedClass);
     }
