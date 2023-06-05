@@ -7,16 +7,13 @@ import edu.stanford.protege.webprotege.common.LocalNameDictionaryLanguage;
 import edu.stanford.protege.webprotege.common.WebProtegeCommonConfiguration;
 import edu.stanford.protege.webprotege.jackson.WebProtegeJacksonApplication;
 import org.assertj.core.api.Assertions;
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.context.annotation.Import;
 
@@ -26,7 +23,6 @@ import static edu.stanford.protege.webprotege.entity.PrimitiveType.CLASS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.when;
 
 @JsonTest
 @Import({WebProtegeJacksonApplication.class, WebProtegeCommonConfiguration.class})
