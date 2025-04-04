@@ -5,10 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.auto.value.AutoValue;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import edu.stanford.protege.webprotege.common.DictionaryLanguage;
-import edu.stanford.protege.webprotege.common.ShortForm;
+import com.google.common.collect.*;
+import edu.stanford.protege.webprotege.common.*;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLEntityVisitorEx;
@@ -32,19 +30,27 @@ public abstract class OWLClassData extends OWLEntityData {
 
     public static OWLClassData get(@Nonnull OWLClass cls,
                                    @Nonnull ImmutableMap<DictionaryLanguage, String> shortForms) {
-        return get(cls, shortForms, false);
+        return get(cls, shortForms, false, ImmutableSet.of());
     }
 
     public static OWLClassData get(@Nonnull OWLClass cls,
                                    @Nonnull ImmutableMap<DictionaryLanguage, String> shortForms,
                                    boolean deprecated) {
-        return get(cls, toShortFormList(shortForms), deprecated);
+        return get(cls, toShortFormList(shortForms), deprecated, ImmutableSet.of());
+    }
+
+    public static OWLClassData get(@Nonnull OWLClass cls,
+                                   @Nonnull ImmutableMap<DictionaryLanguage, String> shortForms,
+                                   boolean deprecated,
+                                   ImmutableSet<EntityStatus> statuses) {
+        return get(cls, toShortFormList(shortForms), deprecated, statuses);
     }
 
     public static OWLClassData get(@JsonProperty("entity") @Nonnull OWLClass cls,
                                    @JsonProperty("shortForms") @Nonnull ImmutableList<ShortForm> shortForms,
-                                   @JsonProperty("deprecated") boolean deprecated) {
-        return new AutoValue_OWLClassData(shortForms, deprecated, cls);
+                                   @JsonProperty("deprecated") boolean deprecated,
+                                   @JsonProperty("statuses") ImmutableSet<EntityStatus> statuses) {
+        return new AutoValue_OWLClassData(shortForms, deprecated, cls, statuses);
     }
 
     /**
@@ -56,9 +62,14 @@ public abstract class OWLClassData extends OWLEntityData {
      */
     @JsonCreator
     protected static OWLClassData get(@JsonProperty("iri") @Nonnull String iri,
-                                   @JsonProperty(value = "shortForms") @Nullable ImmutableList<ShortForm> shortForms,
-                                   @JsonProperty("deprecated") boolean deprecated) {
-        return new AutoValue_OWLClassData(Objects.requireNonNullElse(shortForms, ImmutableList.of()), deprecated, new OWLClassImpl(IRI.create(iri)));
+                                      @JsonProperty(value = "shortForms") @Nullable ImmutableList<ShortForm> shortForms,
+                                      @JsonProperty("deprecated") boolean deprecated,
+                                      @JsonProperty("statuses") ImmutableSet<EntityStatus> statuses) {
+        return new AutoValue_OWLClassData(
+                Objects.requireNonNullElse(shortForms, ImmutableList.of()),
+                deprecated,
+                new OWLClassImpl(IRI.create(iri)),
+                Objects.requireNonNullElse(statuses, ImmutableSet.of()));
     }
 
     @JsonIgnore
@@ -84,6 +95,9 @@ public abstract class OWLClassData extends OWLEntityData {
     public PrimitiveType getType() {
         return PrimitiveType.CLASS;
     }
+
+    @Nonnull
+    public abstract ImmutableSet<EntityStatus> getStatuses();
 
     @Override
     public <R, E extends Throwable> R accept(OWLPrimitiveDataVisitor<R, E> visitor) throws E {
