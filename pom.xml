@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>edu.stanford.protege</groupId>
 	<artifactId>webprotege-entity-data</artifactId>
-	<version>0.9.4-SNAPSHOT</version>
+	<version>0.9.4</version>
 	<name>webprotege-entity-data</name>
 	<properties>
 		<java.version>16</java.version>
@@ -40,7 +40,7 @@
 		<dependency>
 			<groupId>edu.stanford.protege</groupId>
 			<artifactId>webprotege-common</artifactId>
-			<version>0.9.4</version>
+			<version>0.9.11</version>
 		</dependency>
 		<dependency>
 			<groupId>edu.stanford.protege</groupId>
