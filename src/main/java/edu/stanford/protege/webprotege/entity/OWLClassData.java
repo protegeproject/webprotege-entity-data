@@ -65,10 +65,10 @@ public abstract class OWLClassData extends OWLEntityData {
                                       @JsonProperty(value = "shortForms") @Nullable ImmutableList<ShortForm> shortForms,
                                       @JsonProperty("deprecated") boolean deprecated,
                                       @JsonProperty("statuses") ImmutableSet<EntityStatus> statuses) {
-        return new AutoValue_OWLClassData(
+        return get(
+                new OWLClassImpl(IRI.create(iri)),
                 Objects.requireNonNullElse(shortForms, ImmutableList.of()),
                 deprecated,
-                new OWLClassImpl(IRI.create(iri)),
                 Objects.requireNonNullElse(statuses, ImmutableSet.of()));
     }
 
